@@ -13,6 +13,7 @@ public class LevelSection : ScriptableObject
     public Curve GateWidth = new Curve();
     public Curve GatePosOppChance = new Curve();
     public Curve GatePosOuterBias = new Curve();
+    public Curve GatePosOuterMax = new Curve();
     
     public Color GateColor = Color.white;
     

@@ -1,4 +1,3 @@
-using UnityEngine;
 using static StateController.State;
 
 public class PauseUI : StateController.StateListener

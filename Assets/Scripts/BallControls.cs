@@ -20,9 +20,9 @@ public class BallControls : StateController.StateListener
     {
         StateController.OnStateChange += (oldState, newState) =>
         {
-            if (oldState == Game && newState == Pause) OnPause();
-            else if (oldState == Pause && newState == Game) OnUnpause();
-            else if (oldState == Game || oldState == Init || oldState == Pause) OnOther();
+            if (oldState == Game && newState == Pause) return;
+            if (oldState == Pause && newState == Game) return;
+            if (oldState == Game || oldState == Init || oldState == Pause) OnOther();
         };
     }
 
@@ -31,20 +31,9 @@ public class BallControls : StateController.StateListener
         _rigidbody = GetComponent<Rigidbody2D>();
         _initialPos = transform.position;
     }
-    
-    private void OnPause()
-    {
-        Time.timeScale = 0f;
-    }
-    
-    private void OnUnpause()
-    {
-        Time.timeScale = 1f;
-    }
 
     private void OnOther()
     {
-        Time.timeScale = 1f;
         transform.position = _initialPos;
         _rigidbody.velocity = MenuVelocity;
         transform.Find("Trail").GetComponent<TrailRenderer>().Clear();

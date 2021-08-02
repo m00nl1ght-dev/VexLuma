@@ -1,4 +1,5 @@
 using UnityEngine;
+using static StateController.State;
 
 public class MenuUI : StateController.StateListener
 {
@@ -6,8 +7,8 @@ public class MenuUI : StateController.StateListener
     {
         StateController.OnStateChange += (oldState, newState) =>
         {
-            if (oldState == StateController.State.Menu) OnMenuHide();
-            if (newState == StateController.State.Menu) OnMenuShow();
+            if (oldState == Menu) OnMenuHide();
+            if (newState == Menu) OnMenuShow();
         };
     }
 
@@ -23,7 +24,7 @@ public class MenuUI : StateController.StateListener
 
     public void Play()
     {
-        StateController.SwitchTo(StateController.State.Game);
+        StateController.SwitchTo(Game);
     }
     
     public void Scores()

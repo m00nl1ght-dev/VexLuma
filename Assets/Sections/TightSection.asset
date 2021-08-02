@@ -43,7 +43,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   MoveSpeed:
-    LowerValue: 2
+    LowerValue: 2.5
     UpperValue: 4
     Interpolation:
       serializedVersion: 2
@@ -126,6 +126,33 @@ MonoBehaviour:
   GatePosOuterBias:
     LowerValue: 0.8
     UpperValue: 1.2
+    Interpolation:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 1
+        value: 1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+  GatePosOuterMax:
+    LowerValue: 0.7
+    UpperValue: 1
     Interpolation:
       serializedVersion: 2
       m_Curve:

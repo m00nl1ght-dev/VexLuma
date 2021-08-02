@@ -10,12 +10,16 @@ public class LevelGen : StateController.StateListener
     public List<LevelSection> LevelSections;
     public GameObject GatePrefab;
     public Text ScoreText;
+    public Text SlowChargeText;
     
-    // Dimensions and Positions
+    // Consts
     public float SpawnPosition = -12f;
     public float DespawnPosition = 12f;
     public float GateOriginSide = 16f;
     public float GateThickness = 0.2f;
+    public float SlowMultiplier = 0.5f;
+    public float SlowCostPerSecond = 10f;
+    public float InitialSlowCharge = 100f;
     
     // Difficulty Values
     private float _dSpawnInterval;
@@ -23,6 +27,7 @@ public class LevelGen : StateController.StateListener
     private float _dGateWidth;
     private float _dGatePosOppChance;
     private float _dGatePosOuterBias;
+    private float _dGatePosOuterMax;
 
     // Internal Vars
     private readonly List<GameObject> _gates = new List<GameObject>();
@@ -30,33 +35,38 @@ public class LevelGen : StateController.StateListener
     private int _remainingSectionGates;
     private float _lastGatePos;
     private float _timeUntilNextSpawn;
+    private float _slowCharge;
     private int _score;
 
     public override void RegisterEvents()
     {
         StateController.OnStateChange += (oldState, newState) =>
         {
+            UpdateTimeScale();
             if (oldState == Game && newState != Pause) OnGameEnd();
-            if (oldState == Pause && newState != Game) OnGameEnd();
-            if (newState == Game && oldState != Pause) OnGameStart();
+            else if (oldState == Pause && newState != Game) OnGameEnd();
+            else if (newState == Game && oldState != Pause) OnGameStart();
         };
     }
 
     private void OnGameStart() 
     {
         _score = 0;
-        ScoreText.text = _score.ToString();
+        _slowCharge = InitialSlowCharge;
         ScoreText.gameObject.SetActive(true);
+        SlowChargeText.gameObject.SetActive(true);
         _currentSection = LevelSections[0];
         _remainingSectionGates = _currentSection.MaxSectionGates;
         UpdateSection();
         _lastGatePos = 0f;
         _timeUntilNextSpawn = 0f;
+        UpdateUI();
     }
     
     private void OnGameEnd()
     {
         ScoreText.gameObject.SetActive(false);
+        SlowChargeText.gameObject.SetActive(false);
         foreach (var gate in _gates) Destroy(gate);
         _remainingSectionGates = 0;
         _currentSection = null;
@@ -87,11 +97,25 @@ public class LevelGen : StateController.StateListener
         
         if (StateController.CurrentState != Game) return;
         
+        var currentSpeedMultiplier = 1f;
+        if (Input.GetKey(KeyCode.Space) || Input.GetKey(KeyCode.UpArrow) || Input.GetKey(KeyCode.W))
+        {
+            if (_slowCharge >= 1f)
+            {
+                currentSpeedMultiplier = SlowMultiplier;
+                _slowCharge -= Time.deltaTime * SlowCostPerSecond;
+            }
+        }
+        else
+        {
+            _slowCharge += Time.deltaTime;
+        }
+
         for (int i = _gates.Count - 1; i >= 0; i--) 
         {
             var gate = _gates[i];
             var position = gate.transform.position;
-            gate.transform.position = new Vector3(position.x, position.y + _dMoveSpeed * Time.deltaTime);
+            gate.transform.position = new Vector3(position.x, position.y + _dMoveSpeed * Time.deltaTime * currentSpeedMultiplier);
             
             if (position.y >= DespawnPosition) 
             {
@@ -100,7 +124,7 @@ public class LevelGen : StateController.StateListener
             }
         }
 
-        _timeUntilNextSpawn -= Time.deltaTime;
+        _timeUntilNextSpawn -= Time.deltaTime * currentSpeedMultiplier;
 
         if (_timeUntilNextSpawn <= 0f) 
         {
@@ -122,8 +146,25 @@ public class LevelGen : StateController.StateListener
             
             _score++;
             StateController.PendingScore = _score;
-            ScoreText.text = _score.ToString();
         }
+        
+        UpdateUI();
+    }
+
+    private void UpdateTimeScale()
+    {
+        Time.timeScale = StateController.CurrentState switch
+        {
+            Game => 1f,
+            Pause => 0f,
+            _ => 1f
+        };
+    }
+
+    private void UpdateUI()
+    {
+        ScoreText.text = _score.ToString();
+        SlowChargeText.text = ((int)_slowCharge).ToString();
     }
 
     private void UpdateSection()
@@ -141,6 +182,7 @@ public class LevelGen : StateController.StateListener
         _dGateWidth = _currentSection.GateWidth.Eval(diffVal);
         _dGatePosOppChance = _currentSection.GatePosOppChance.Eval(diffVal);
         _dGatePosOuterBias = _currentSection.GatePosOuterBias.Eval(diffVal);
+        _dGatePosOuterMax = _currentSection.GatePosOuterMax.Eval(diffVal);
     }
 
     private void PositionGates(GameObject leftGate, GameObject rightGate)
@@ -148,7 +190,7 @@ public class LevelGen : StateController.StateListener
         var lastGateSide = _lastGatePos < 0f ? -1f : 1f;
         var gateSide = Random.value <= _dGatePosOppChance ? -lastGateSide : lastGateSide;
 
-        var maxPos = GateOriginSide - _dGateWidth;
+        var maxPos = (GateOriginSide - _dGateWidth) * _dGatePosOuterMax;
         var gatePos = gateSide * BiasedRandomRange(0f, maxPos, 1 / _dGatePosOuterBias);
 
         var leftEdge = gatePos - _dGateWidth / 2;

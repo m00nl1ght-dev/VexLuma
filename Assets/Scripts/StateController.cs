@@ -12,8 +12,9 @@ public class StateController : MonoBehaviour
 
     public static void SwitchTo(State state)
     {
-        OnStateChange?.Invoke(CurrentState, state);
+        var oldState = CurrentState;
         CurrentState = state;
+        OnStateChange?.Invoke(oldState, state);
     }
 
     [SerializeField]
