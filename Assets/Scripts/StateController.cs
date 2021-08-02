@@ -31,7 +31,7 @@ public class StateController : MonoBehaviour
 
     public enum State
     {
-        Init, Menu, Game, Scores
+        Init, Menu, Game, Scores, Pause
     }
     
     public abstract class StateListener : MonoBehaviour

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using static StateController.State;
 using Random = UnityEngine.Random;
 
 public class LevelGen : StateController.StateListener 
@@ -28,15 +29,16 @@ public class LevelGen : StateController.StateListener
     private LevelSection _currentSection;
     private int _remainingSectionGates;
     private float _lastGatePos;
-    private float _lastSpawnTime;
+    private float _timeUntilNextSpawn;
     private int _score;
 
     public override void RegisterEvents()
     {
         StateController.OnStateChange += (oldState, newState) =>
         {
-            if (oldState == StateController.State.Game) OnGameEnd();
-            if (newState == StateController.State.Game) OnGameStart();
+            if (oldState == Game && newState != Pause) OnGameEnd();
+            if (oldState == Pause && newState != Game) OnGameEnd();
+            if (newState == Game && oldState != Pause) OnGameStart();
         };
     }
 
@@ -49,7 +51,7 @@ public class LevelGen : StateController.StateListener
         _remainingSectionGates = _currentSection.MaxSectionGates;
         UpdateSection();
         _lastGatePos = 0f;
-        _lastSpawnTime = Time.time - _dSpawnInterval / _dMoveSpeed;
+        _timeUntilNextSpawn = 0f;
     }
     
     private void OnGameEnd()
@@ -63,7 +65,27 @@ public class LevelGen : StateController.StateListener
 
     private void Update()
     {
-        if (StateController.CurrentState != StateController.State.Game) return;
+        switch (StateController.CurrentState)
+        {
+            case Game:
+            {
+                if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.P)) {
+                    StateController.SwitchTo(Pause);
+                }
+
+                break;
+            }
+            case Pause:
+            {
+                if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.P)) {
+                    StateController.SwitchTo(Game);
+                }
+
+                break;
+            }
+        }
+        
+        if (StateController.CurrentState != Game) return;
         
         for (int i = _gates.Count - 1; i >= 0; i--) 
         {
@@ -78,7 +100,9 @@ public class LevelGen : StateController.StateListener
             }
         }
 
-        if (Time.time - _lastSpawnTime >= _dSpawnInterval / _dMoveSpeed) 
+        _timeUntilNextSpawn -= Time.deltaTime;
+
+        if (_timeUntilNextSpawn <= 0f) 
         {
             var leftGate = Instantiate(GatePrefab, new Vector3(0f, SpawnPosition), Quaternion.identity, transform);
             var rightGate = Instantiate(GatePrefab, new Vector3(0f, SpawnPosition), Quaternion.identity, transform);
@@ -93,14 +117,13 @@ public class LevelGen : StateController.StateListener
             
             PositionGates(leftGate, rightGate);
             
-            _lastSpawnTime = Time.time;
+            _timeUntilNextSpawn = _dSpawnInterval / _dMoveSpeed;
             _remainingSectionGates--;
             
             _score++;
             StateController.PendingScore = _score;
             ScoreText.text = _score.ToString();
         }
-        
     }
 
     private void UpdateSection()
