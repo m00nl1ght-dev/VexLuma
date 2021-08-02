@@ -30,7 +30,7 @@ public class LevelGen : StateController.StateListener
     private float _dGatePosOuterMax;
 
     // Internal Vars
-    private readonly List<GameObject> _gates = new List<GameObject>();
+    private readonly List<Rigidbody2D> _gates = new List<Rigidbody2D>();
     private LevelSection _currentSection;
     private int _remainingSectionGates;
     private float _lastGatePos;
@@ -67,7 +67,7 @@ public class LevelGen : StateController.StateListener
     {
         ScoreText.gameObject.SetActive(false);
         SlowChargeText.gameObject.SetActive(false);
-        foreach (var gate in _gates) Destroy(gate);
+        foreach (var gate in _gates) Destroy(gate.gameObject);
         _remainingSectionGates = 0;
         _currentSection = null;
         _gates.Clear();
@@ -115,12 +115,12 @@ public class LevelGen : StateController.StateListener
         {
             var gate = _gates[i];
             var position = gate.transform.position;
-            gate.transform.position = new Vector3(position.x, position.y + _dMoveSpeed * Time.deltaTime * currentSpeedMultiplier);
+            gate.velocity = new Vector3(0f, _dMoveSpeed * currentSpeedMultiplier);
             
             if (position.y >= DespawnPosition) 
             {
                 _gates.RemoveAt(i);
-                Destroy(gate);
+                Destroy(gate.gameObject);
             }
         }
 
@@ -131,8 +131,8 @@ public class LevelGen : StateController.StateListener
             var leftGate = Instantiate(GatePrefab, new Vector3(0f, SpawnPosition), Quaternion.identity, transform);
             var rightGate = Instantiate(GatePrefab, new Vector3(0f, SpawnPosition), Quaternion.identity, transform);
             
-            _gates.Add(leftGate);
-            _gates.Add(rightGate);
+            _gates.Add(leftGate.GetComponent<Rigidbody2D>());
+            _gates.Add(rightGate.GetComponent<Rigidbody2D>());
 
             UpdateSection();
             

@@ -134,6 +134,7 @@ GameObject:
   - component: {fileID: 6010372}
   - component: {fileID: 6010373}
   - component: {fileID: 6010374}
+  - component: {fileID: 6010375}
   m_Layer: 7
   m_Name: BorderLeft
   m_TagString: Untagged
@@ -232,6 +233,27 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 100, y: 2}
   m_EdgeRadius: 0
+--- !u!50 &6010375
+Rigidbody2D:
+  serializedVersion: 4
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6010371}
+  m_BodyType: 2
+  m_Simulated: 1
+  m_UseFullKinematicContacts: 0
+  m_UseAutoMass: 0
+  m_Mass: 1
+  m_LinearDrag: 0
+  m_AngularDrag: 0.05
+  m_GravityScale: 1
+  m_Material: {fileID: 6200000, guid: 171b8729085c62d4eb66918d85343d13, type: 2}
+  m_Interpolate: 0
+  m_SleepingMode: 1
+  m_CollisionDetection: 0
+  m_Constraints: 0
 --- !u!1 &56782317
 GameObject:
   m_ObjectHideFlags: 0
@@ -1172,6 +1194,8 @@ MonoBehaviour:
   GateOriginSide: 16
   GateThickness: 0.2
   SlowMultiplier: 0.5
+  SlowCostPerSecond: 10
+  InitialSlowCharge: 100
 --- !u!1 &574070339
 GameObject:
   m_ObjectHideFlags: 0
@@ -1863,6 +1887,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1230554923}
   - component: {fileID: 1230554924}
+  - component: {fileID: 1230554925}
   m_Layer: 7
   m_Name: BorderBottom
   m_TagString: Untagged
@@ -1910,6 +1935,27 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 40, y: 10}
   m_EdgeRadius: 0
+--- !u!50 &1230554925
+Rigidbody2D:
+  serializedVersion: 4
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1230554922}
+  m_BodyType: 2
+  m_Simulated: 1
+  m_UseFullKinematicContacts: 0
+  m_UseAutoMass: 0
+  m_Mass: 1
+  m_LinearDrag: 0
+  m_AngularDrag: 0.05
+  m_GravityScale: 1
+  m_Material: {fileID: 6200000, guid: 171b8729085c62d4eb66918d85343d13, type: 2}
+  m_Interpolate: 0
+  m_SleepingMode: 1
+  m_CollisionDetection: 0
+  m_Constraints: 0
 --- !u!1 &1235324749
 GameObject:
   m_ObjectHideFlags: 0
@@ -3201,6 +3247,7 @@ GameObject:
   - component: {fileID: 2115343674}
   - component: {fileID: 2115343675}
   - component: {fileID: 2115343676}
+  - component: {fileID: 2115343677}
   m_Layer: 7
   m_Name: BorderRight
   m_TagString: Untagged
@@ -3299,6 +3346,27 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 100, y: 2}
   m_EdgeRadius: 0
+--- !u!50 &2115343677
+Rigidbody2D:
+  serializedVersion: 4
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2115343673}
+  m_BodyType: 2
+  m_Simulated: 1
+  m_UseFullKinematicContacts: 0
+  m_UseAutoMass: 0
+  m_Mass: 1
+  m_LinearDrag: 0
+  m_AngularDrag: 0.05
+  m_GravityScale: 1
+  m_Material: {fileID: 6200000, guid: 171b8729085c62d4eb66918d85343d13, type: 2}
+  m_Interpolate: 0
+  m_SleepingMode: 1
+  m_CollisionDetection: 0
+  m_Constraints: 0
 --- !u!1 &2123085206
 GameObject:
   m_ObjectHideFlags: 0
@@ -3645,7 +3713,7 @@ Rigidbody2D:
   m_AngularDrag: 0
   m_GravityScale: 1
   m_Material: {fileID: 6200000, guid: 3cc8a278f418abb4faca8cdee5052689, type: 2}
-  m_Interpolate: 0
+  m_Interpolate: 1
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 4
