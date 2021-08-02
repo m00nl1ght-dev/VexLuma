@@ -44,9 +44,16 @@ public class ScoresUI : StateController.StateListener
     private void OnScoresShow() 
     {
         gameObject.SetActive(true);
-        
+
         if (StateController.PendingScore >= 0)
+        {
             _scores.Add(new Score(null, StateController.PendingScore));
+            transform.Find("Title").GetComponent<Text>().text = "Game Over";
+        }
+        else
+        {
+            transform.Find("Title").GetComponent<Text>().text = "Scores";
+        }
         
         _scores.Sort((a, b) => b.Value - a.Value);
         
