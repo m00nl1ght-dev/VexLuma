@@ -1,8 +1,13 @@
 ﻿using System;
 using UnityEngine;
 
+/// <summary>
+/// Utility script that adapts local scale based on screen aspect ratio.
+/// </summary>
 public class FillScreenSpace : MonoBehaviour {
     
+    [SerializeField]
+    [Tooltip("The screen size to use as baseline for adaption.")]
     public Vector2 targetSize;
     
     private void Awake() {

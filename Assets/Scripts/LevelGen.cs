@@ -4,21 +4,54 @@ using UnityEngine.UI;
 using static StateController.State;
 using Random = UnityEngine.Random;
 
+/// <summary>
+/// Script attached to the root GameObject of the level.
+/// Handles random level generation and general game logic.
+/// </summary>
 public class LevelGen : StateController.StateListener 
 {
-    // Inspector Refs
+    [SerializeField]
+    [Tooltip("List of all level sections to be used in random generation.")]
     public List<LevelSection> LevelSections;
+    
+    [SerializeField]
+    [Tooltip("Prefab to create gates from.")]
     public GameObject GatePrefab;
+    
+    [SerializeField]
+    [Tooltip("Reference to Text UI for score value.")]
     public Text ScoreText;
+    
+    [SerializeField]
+    [Tooltip("Reference to Text UI for slow charge value.")]
     public Text SlowChargeText;
     
-    // Consts
+    [SerializeField]
+    [Tooltip("Initial Y position of gates when they are spawned.")]
     public float SpawnPosition = -12f;
+    
+    [SerializeField]
+    [Tooltip("Y position that gates will despawn at.")]
     public float DespawnPosition = 12f;
+    
+    [SerializeField]
+    [Tooltip("How far the gates extend to each side horizontally.")]
     public float GateOriginSide = 16f;
+    
+    [SerializeField]
+    [Tooltip("How thick the gates are vertically.")]
     public float GateThickness = 0.2f;
+    
+    [SerializeField]
+    [Tooltip("Multiplier applied to the time scale when player uses slowdown.")]
     public float SlowMultiplier = 0.5f;
+    
+    [SerializeField]
+    [Tooltip("Slowdown charge cost while active per second.")]
     public float SlowCostPerSecond = 10f;
+    
+    [SerializeField]
+    [Tooltip("Slowdown charge the player starts with.")]
     public float InitialSlowCharge = 100f;
     
     // Difficulty Values
@@ -38,6 +71,10 @@ public class LevelGen : StateController.StateListener
     private float _slowCharge;
     private int _score;
 
+    /// <summary>
+    /// Called during initialisation by the StateController.
+    /// Scripts can subscribe to State change events in this method.
+    /// </summary>
     public override void RegisterEvents()
     {
         StateController.OnStateChange += (oldState, newState) =>
@@ -49,55 +86,54 @@ public class LevelGen : StateController.StateListener
         };
     }
 
+    /// <summary>
+    /// Called on State change:
+    /// !Pause -> Game
+    /// </summary>
     private void OnGameStart() 
     {
         _score = 0;
         _slowCharge = InitialSlowCharge;
         ScoreText.gameObject.SetActive(true);
         SlowChargeText.gameObject.SetActive(true);
+        
         _currentSection = LevelSections[0];
         _remainingSectionGates = _currentSection.MaxSectionGates;
         UpdateSection();
+        
         _lastGatePos = 0f;
         _timeUntilNextSpawn = 0f;
         UpdateUI();
     }
     
+    /// <summary>
+    /// Called on State change:
+    /// Game | Pause -> Any
+    /// </summary>
     private void OnGameEnd()
     {
         ScoreText.gameObject.SetActive(false);
         SlowChargeText.gameObject.SetActive(false);
+        
         foreach (var gate in _gates) Destroy(gate.gameObject);
         _remainingSectionGates = 0;
+        
         _currentSection = null;
         _gates.Clear();
     }
 
     private void Update()
     {
-        switch (StateController.CurrentState)
-        {
-            case Game:
-            {
-                if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.P)) {
-                    StateController.SwitchTo(Pause);
-                }
-
-                break;
-            }
-            case Pause:
-            {
-                if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.P)) {
-                    StateController.SwitchTo(Game);
-                }
-
-                break;
-            }
+        // Player presses pause or unpause -> change state
+        if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.P)) {
+            if (StateController.CurrentState == Game) StateController.SwitchTo(Pause);
+            else if (StateController.CurrentState == Pause) StateController.SwitchTo(Game);
         }
-        
+
         if (StateController.CurrentState != Game) return;
-        
         var currentSpeedMultiplier = 1f;
+        
+        // Player presses slowdown -> update speed multiplier and charge
         if (Input.GetKey(KeyCode.Space) || Input.GetKey(KeyCode.UpArrow) || Input.GetKey(KeyCode.W))
         {
             if (_slowCharge >= 1f)
@@ -111,6 +147,7 @@ public class LevelGen : StateController.StateListener
             _slowCharge += Time.deltaTime;
         }
 
+        // Update gate positions and despawn them as necessary
         for (int i = _gates.Count - 1; i >= 0; i--) 
         {
             var gate = _gates[i];
@@ -124,8 +161,10 @@ public class LevelGen : StateController.StateListener
             }
         }
 
+        // Update timer for next spawn
         _timeUntilNextSpawn -= Time.deltaTime * currentSpeedMultiplier;
 
+        // If timer is ready, spawn new gate and position it
         if (_timeUntilNextSpawn <= 0f) 
         {
             var leftGate = Instantiate(GatePrefab, new Vector3(0f, SpawnPosition), Quaternion.identity, transform);
@@ -151,6 +190,9 @@ public class LevelGen : StateController.StateListener
         UpdateUI();
     }
 
+    /// <summary>
+    /// Refreshes the time scale of the physics engine based on current game state.
+    /// </summary>
     private void UpdateTimeScale()
     {
         Time.timeScale = StateController.CurrentState switch
@@ -161,22 +203,37 @@ public class LevelGen : StateController.StateListener
         };
     }
 
+    /// <summary>
+    /// Refreshes UI element values.
+    /// </summary>
     private void UpdateUI()
     {
         ScoreText.text = _score.ToString();
         SlowChargeText.text = ((int)_slowCharge).ToString();
     }
 
+    /// <summary>
+    /// Update the current level section used for random generation.
+    /// </summary>
     private void UpdateSection()
     {
+        // If current section ended, start a new one.
         if (_remainingSectionGates <= 0)
         {
+            // Randomly chose new section
             _currentSection = LevelSections[Random.Range(0, LevelSections.Count)];
+            
+            // Bias towards default section
             if (Random.value <= 0.3f) _currentSection = LevelSections[0];
+            
+            // Init section length randomly
             _remainingSectionGates = Random.Range(_currentSection.MinSectionGates, _currentSection.MaxSectionGates + 1);
         }
         
+        // Calculate current difficuly based on score
         var diffVal = _currentSection.EvalScore(_score);
+        
+        // Apply all values from current section to internal fields
         _dSpawnInterval = _currentSection.SpawnInterval.Eval(diffVal);
         _dMoveSpeed = _currentSection.MoveSpeed.Eval(diffVal);
         _dGateWidth = _currentSection.GateWidth.Eval(diffVal);
@@ -185,29 +242,36 @@ public class LevelGen : StateController.StateListener
         _dGatePosOuterMax = _currentSection.GatePosOuterMax.Eval(diffVal);
     }
 
+    /// <summary>
+    /// Position newly spawned gates randomly based on current difficulty.
+    /// </summary>
     private void PositionGates(GameObject leftGate, GameObject rightGate)
     {
+        // Determine which side the new gate will be on based on previous side
         var lastGateSide = _lastGatePos < 0f ? -1f : 1f;
         var gateSide = Random.value <= _dGatePosOppChance ? -lastGateSide : lastGateSide;
 
+        // Determine center position of the new gate
         var maxPos = (GateOriginSide - _dGateWidth) * _dGatePosOuterMax;
         var gatePos = gateSide * BiasedRandomRange(0f, maxPos, 1 / _dGatePosOuterBias);
 
+        // Determine left and right edge positions of the new gate
         var leftEdge = gatePos - _dGateWidth / 2;
         var rightEdge = gatePos + _dGateWidth / 2;
 
+        // Determine left and right wall sizes and positions for the new gate
         var leftSize = leftEdge + GateOriginSide;
         var rightSize = GateOriginSide - rightEdge;
-
         var leftPos = -GateOriginSide + leftSize / 2;
         var rightPos = rightEdge + rightSize / 2;
 
+        // Apply left and right wall sizes and positions for the new gate
         leftGate.transform.position = new Vector3(leftPos, SpawnPosition);
         rightGate.transform.position = new Vector3(rightPos, SpawnPosition);
-
         leftGate.transform.localScale = new Vector3(leftSize, GateThickness);
         rightGate.transform.localScale = new Vector3(rightSize, GateThickness);
 
+        // Store position for next gate generation
         _lastGatePos = gatePos;
     }
 
